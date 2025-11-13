@@ -127,7 +127,7 @@ end:
 vmmap_t *
 vmmap_create(void)
 {
-/*
+
     vmmap_t * map = (vmmap_t *)slab_obj_alloc(vmmap_allocator);
     if (map == NULL) {
         return NULL;
@@ -136,9 +136,8 @@ vmmap_create(void)
     map->vmm_proc = NULL;
     dbg(DBG_PRINT, "(GRADING3B 1)\n");
     return map;
-*/
-NOT_YET_IMPLEMENTED("VM:vmmap create");
-return NULL;
+
+//NOT_YET_IMPLEMENTED("VM:vmmap create");
 }
 
 /* Removes all vmareas from the address space and frees the
@@ -146,7 +145,7 @@ return NULL;
 void
 vmmap_destroy(vmmap_t *map)
 {
-/*
+
     KASSERT(NULL != map);
     dbg(DBG_PRINT, "(GRADING3A 3.a)\n");
 
@@ -168,8 +167,8 @@ vmmap_destroy(vmmap_t *map)
     }
 
     slab_obj_free(vmmap_allocator, map);
-*/
-NOT_YET_IMPLEMENTED("VM:vmmap destroy");
+
+//NOT_YET_IMPLEMENTED("VM:vmmap destroy");
 }
 
 /* Add a vmarea to an address space. Assumes (i.e. asserts to some extent)
@@ -179,7 +178,7 @@ NOT_YET_IMPLEMENTED("VM:vmmap destroy");
 void
 vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 {
-/*
+
     KASSERT(NULL != map && NULL != newvma);
     dbg(DBG_PRINT, "(GRADING3A 3.b)\n");
     KASSERT(NULL == newvma->vma_vmmap);
@@ -202,8 +201,8 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 
     list_insert_tail(&map->vmm_list, &newvma->vma_plink);
     dbg(DBG_PRINT, "(GRADING3B)\n");
-*/
-NOT_YET_IMPLEMENTED("VM:vmmap insert");
+
+//NOT_YET_IMPLEMENTED("VM:vmmap insert");
 }
 
 /* Find a contiguous range of free virtual pages of length npages in
@@ -263,7 +262,6 @@ return 0;
 vmarea_t *
 vmmap_lookup(vmmap_t *map, uint32_t vfn)
 {
-/*
     KASSERT(NULL != map);
     dbg(DBG_PRINT, "(GRADING3A 3.c)\n");
     vmarea_t* area = NULL;
@@ -278,9 +276,8 @@ vmmap_lookup(vmmap_t *map, uint32_t vfn)
 
     dbg(DBG_PRINT, "(GRADING3C)\n");
     return NULL;
-*/
-NOT_YET_IMPLEMENTED("VM:vmmap lookup");
-return NULL;
+
+//NOT_YET_IMPLEMENTED("VM:vmmap lookup");
 }
 
 /* Allocates a new vmmap containing a new vmarea for each area in the
@@ -347,7 +344,7 @@ int
 vmmap_map(vmmap_t *map, vnode_t *file, uint32_t lopage, uint32_t npages,
           int prot, int flags, off_t off, int dir, vmarea_t **new)
 {
-/*
+
 KASSERT(NULL != map);
     KASSERT(0 < npages);
     dbg(DBG_PRINT, "(GRADING3A 3.d)\n");
@@ -430,9 +427,8 @@ KASSERT(NULL != map);
         dbg(DBG_PRINT, "(GRADING3B)\n");
     }
     return 0;
-*/
-NOT_YET_IMPLEMENTED("VM:vmmap vmmap");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM:vmmap vmmap");
 }
 
 /*
@@ -467,7 +463,7 @@ return 0;
 int
 vmmap_remove(vmmap_t *map, uint32_t lopage, uint32_t npages)
 {
-/*
+
 uint32_t unmap_end = lopage + npages;
 
     list_link_t *current_link = map->vmm_list.l_next;
@@ -540,9 +536,8 @@ if (owner && owner->p_pagedir) {
                    (uintptr_t)PN_TO_ADDR(lopage + npages));
 }
     return 0;
-*/
-NOT_YET_IMPLEMENTED("VM:vmmap remove");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM:vmmap remove");
 }
 
 /*
@@ -552,7 +547,7 @@ return 0;
 int
 vmmap_is_range_empty(vmmap_t *map, uint32_t startvfn, uint32_t npages)
 {
-/*
+
 KASSERT((startvfn < startvfn + npages) && (ADDR_TO_PN(USER_MEM_LOW) <= startvfn) && (ADDR_TO_PN(USER_MEM_HIGH) >= startvfn + npages));
     dbg(DBG_PRINT, "(GRADING3A 3.d)\n");
 
@@ -569,9 +564,8 @@ KASSERT((startvfn < startvfn + npages) && (ADDR_TO_PN(USER_MEM_LOW) <= startvfn)
 
     dbg(DBG_PRINT, "(GRADING3B)\n");
     return 1;
-*/
-NOT_YET_IMPLEMENTED("VM:vmmap rangeempty");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM:vmmap rangeempty");
 }
 
 /* Read into 'buf' from the virtual address space of 'map' starting at
@@ -585,7 +579,7 @@ return 0;
 int
 vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
 {
-/*
+
     if (count == 0) return 0;
     if (vaddr == NULL) return -EFAULT;
 
@@ -643,9 +637,8 @@ vmmap_read(vmmap_t *map, const void *vaddr, void *buf, size_t count)
     }
 
     return 0;
-*/
-NOT_YET_IMPLEMENTED("VM:vmmap read");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM:vmmap read");
 }
 
 /* Write from 'buf' into the virtual address space of 'map' starting at
@@ -659,7 +652,7 @@ return 0;
 int
 vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
 {
-/*
+
     if (count == 0) return 0;
     if (vaddr == NULL) return -EFAULT;
 
@@ -724,7 +717,5 @@ vmmap_write(vmmap_t *map, void *vaddr, const void *buf, size_t count)
     }
 
     return 0;
-*/
-NOT_YET_IMPLEMENTED("VM:vmmap write");
-return 0;
+
 }
