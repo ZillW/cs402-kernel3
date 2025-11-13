@@ -148,7 +148,7 @@ fail:
 int
 addr_perm(struct proc *p, const void *vaddr, int perm)
 {
-/*    vmarea_t *vma = vmmap_lookup(p->p_vmmap, ADDR_TO_PN((uintptr_t)vaddr));
+    vmarea_t *vma = vmmap_lookup(p->p_vmmap, ADDR_TO_PN((uintptr_t)vaddr));
     if (!vma) return 0;
 
     if ((perm & PROT_READ)  && !(vma->vma_prot & PROT_READ))  return 0;
@@ -156,9 +156,9 @@ addr_perm(struct proc *p, const void *vaddr, int perm)
     if ((perm & PROT_EXEC)  && !(vma->vma_prot & PROT_EXEC))  return 0;
 
     return 1;
-*/
-NOT_YET_IMPLEMENTED("VM: addr perm");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM: addr perm");
+
 }
 
 /*
@@ -173,7 +173,7 @@ return 0;
 int
 range_perm(struct proc *p, const void *avaddr, size_t len, int perm)
 {
-/*
+
     if (len == 0) return 1;
 
     uintptr_t start = (uintptr_t)avaddr;
@@ -188,7 +188,6 @@ range_perm(struct proc *p, const void *avaddr, size_t len, int perm)
         }
     }
     return 1;
-*/
-NOT_YET_IMPLEMENTED("VM: range perm");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM: range perm");
 }
