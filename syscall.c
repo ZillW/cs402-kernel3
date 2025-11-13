@@ -74,7 +74,7 @@ init_func(syscall_init);
 static int
 sys_read(read_args_t *arg)
 {
-/*
+
 read_args_t kern_args;
     void *temp_buffer = NULL;
     int bytes_actually_read = -1;
@@ -112,9 +112,9 @@ read_args_t kern_args;
 
     page_free(temp_buffer);
     return bytes_actually_read;
-*/
-NOT_YET_IMPLEMENTED("VM: sys read");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM: sys read");
+
 }
 
 /*
@@ -123,7 +123,7 @@ return 0;
 static int
 sys_write(write_args_t *arg)
 {
-/*
+
 write_args_t kern_args;
         int ret_status;
         void *kernel_buffer;
@@ -157,9 +157,9 @@ write_args_t kern_args;
 
         dbg(DBG_PRINT, "(GRADING3B 1)\n");
         return ret_status;
-*/
-NOT_YET_IMPLEMENTED("VM: sys write");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM: sys write");
+
 }
 
 /*
@@ -174,7 +174,7 @@ return 0;
 static int
 sys_getdents(getdents_args_t *arg)
 {
-/*
+
 getdents_args_t kernel_args;
     dirent_t kernel_dirent;
     int copy_in_status;
@@ -218,9 +218,8 @@ getdents_args_t kernel_args;
 
     dbg(DBG_PRINT, "(GRADING3B)\n");
     return (int)total_bytes_copied;
-*/
-NOT_YET_IMPLEMENTED("VM: sys getdents");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM: sys getdents");
 }
 
 #ifdef __MOUNTING__
