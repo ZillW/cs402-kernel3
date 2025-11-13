@@ -326,7 +326,7 @@ initproc_run(int arg1, void *arg2)
    int st;
 
 #ifdef __DRIVERS__
-/*    int fd = do_open("/dev/tty0", O_RDONLY);
+    int fd = do_open("/dev/tty0", O_RDONLY);
     if (fd != 0) {
         if (fd >= 0) do_close(fd);
         do_open("/dev/tty0", O_RDONLY);
@@ -343,24 +343,24 @@ initproc_run(int arg1, void *arg2)
         if (fd >= 0) do_close(fd);
         do_open("/dev/tty0", O_WRONLY);
     }
-*/
-Shelltest(0, NULL);
+
+//Shelltest(0, NULL);
 
 #endif
 
-	while (do_waitpid(-1, 0, &st) != -ECHILD) { }
+	//while (do_waitpid(-1, 0, &st) != -ECHILD) { }
 
 	//return NULL;
 
 
 	//const char *path = "/sbin/init";
-	//const char *path = "usr/bin/hello";
-  	//char *argv[] = { (char *)path, NULL };
+	const char *path = "usr/bin/hello";
+  	char *argv[] = { (char *)path, NULL };
 	//char *argv[] = { NULL };
-    	//char *envp[] = { NULL };
+    char *envp[] = { NULL };
 
-	//kernel_execve("/sbin/init", argv, envp);
-	//panic("kernel_execve(%s) returned in initproc_run\n", path);
+	kernel_execve("/sbin/init", argv, envp);
+	panic("kernel_execve(%s) returned in initproc_run\n", path);
     return NULL;
 }
 
