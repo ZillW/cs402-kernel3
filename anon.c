@@ -120,31 +120,34 @@ anon_put(mmobj_t *o)
 {
 
 KASSERT(o && (0 < o->mmo_refcount) && (&anon_mmobj_ops == o->mmo_ops));
-        dbg(DBG_PRINT, "(GRADING3A 4.c)\n");
+    dbg(DBG_PRINT, "(GRADING3A 4.c)\n");
 
-        o->mmo_refcount--;
+    if (o->mmo_refcount - 1 == o->mmo_nrespages) {
+        
+        // 使用 "while list is not empty" 模式来安全地遍历和释放
+        while (!list_empty(&o->mmo_respages)) {
+            pframe_t* pf = list_head(&o->mmo_respages, pframe_t, pf_olink);
 
-        if(o->mmo_refcount == o->mmo_nrespages) {
-            
-            while (!list_empty(&o->mmo_respages)) {
-                pframe_t* pf = list_head(&o->mmo_respages, pframe_t, pf_olink);
-
-                if (pframe_is_pinned(pf)) {
-                        pframe_unpin(pf);
-                }
-                if(pframe_is_dirty(pf) ) {
-                        dbg(DBG_PRINT, "(GRADING3D)\n");
-                        pframe_clean(pf);
-                }
-
-                dbg(DBG_PRINT, "(GRADING3D)\n");
-                
-                pframe_free(pf); 
+            // 只有在 pframe 被 pin 住时才 unpin
+            if (pframe_is_pinned(pf)) {
+                pframe_unpin(pf);
             }
-		slab_obj_free(anon_allocator, o);
+
+            // 只有在 pframe 是 dirty 时才 clean
+            if (pframe_is_dirty(pf)) {
+                dbg(DBG_PRINT, "(GRADING3D)\n");
+                pframe_clean(pf);
+            }
+
+            dbg(DBG_PRINT, "(GRADING3D)\n");
+            pframe_free(pf); // pframe_free 会安全地从链表中移除 pf
         }
 
-//NOT_YET_IMPLEMENTED("VM: anon put");
+        slab_obj_free(anon_allocator, o);
+    }
+    
+    dbg(DBG_PRINT, "(GRADING3B)\n");
+    o->mmo_refcount--;
 }
 
 /* Get the corresponding page from the mmobj. No special handling is
