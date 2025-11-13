@@ -70,7 +70,7 @@
 void
 handle_pagefault(uintptr_t vaddr, uint32_t cause)
 {
-/*
+
 uint32_t page_num = ADDR_TO_PN(vaddr);
     uint32_t pte_flags = PT_PRESENT | PT_USER;
     uint32_t pde_flags = PD_PRESENT | PD_USER;
@@ -128,6 +128,6 @@ uint32_t page_num = ADDR_TO_PN(vaddr);
 
     tlb_flush((uintptr_t)PAGE_ALIGN_DOWN(vaddr));
      dbg(DBG_PRINT, "(GRADING3B)\n");
-*/
-NOT_YET_IMPLEMENTED("VM: handle pagefault");
+
+//NOT_YET_IMPLEMENTED("VM: handle pagefault");
 }
