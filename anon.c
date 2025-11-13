@@ -57,14 +57,14 @@ static mmobj_ops_t anon_mmobj_ops = {
 void
 anon_init()
 {
-/*
+
 	anon_allocator = slab_allocator_create("anon",sizeof(mmobj_t));
         KASSERT(anon_allocator);
         dbg(DBG_PRINT, "(GRADING3A 4.a)\n");
 
 	//anon_allocator = slab_allocator_create("anon",sizeof(mmobj_t));
-*/
-NOT_YET_IMPLEMENTED("VM: anon init");
+
+//NOT_YET_IMPLEMENTED("VM: anon init");
 }
 
 /*
@@ -76,7 +76,7 @@ NOT_YET_IMPLEMENTED("VM: anon init");
 mmobj_t *
 anon_create()
 {
-/*
+
 mmobj_t *new_obj = (mmobj_t *) slab_obj_alloc(anon_allocator);
 
     if (new_obj) {
@@ -86,9 +86,8 @@ mmobj_t *new_obj = (mmobj_t *) slab_obj_alloc(anon_allocator);
 
     dbg(DBG_PRINT, "(GRADING3B)\n");
     return new_obj;
-*/
-NOT_YET_IMPLEMENTED("VM: anon create");
-return NULL;
+
+//NOT_YET_IMPLEMENTED("VM: anon create");
 }
 
 /* Implementation of mmobj entry points: */
@@ -99,13 +98,13 @@ return NULL;
 static void
 anon_ref(mmobj_t *o)
 {
-/*
+
 KASSERT(o && (0 < o->mmo_refcount) && (&anon_mmobj_ops == o->mmo_ops));
     dbg(DBG_PRINT, "(GRADING3A 4.b)\n");
     
     ++o->mmo_refcount;
-*/
-NOT_YET_IMPLEMENTED("VM: anon ref");
+
+//NOT_YET_IMPLEMENTED("VM: anon ref");
 }
 
 /*
@@ -119,7 +118,7 @@ NOT_YET_IMPLEMENTED("VM: anon ref");
 static void
 anon_put(mmobj_t *o)
 {
-/*
+
 KASSERT(o && (0 < o->mmo_refcount) && (&anon_mmobj_ops == o->mmo_ops));
         dbg(DBG_PRINT, "(GRADING3A 4.c)\n");
 
@@ -144,7 +143,7 @@ KASSERT(o && (0 < o->mmo_refcount) && (&anon_mmobj_ops == o->mmo_ops));
             }
 		slab_obj_free(anon_allocator, o);
         }
-*/
+
 NOT_YET_IMPLEMENTED("VM: anon put");
 }
 
@@ -153,13 +152,12 @@ NOT_YET_IMPLEMENTED("VM: anon put");
 static int
 anon_lookuppage(mmobj_t *o, uint32_t pagenum, int forwrite, pframe_t **pf)
 {
-/*
+
 int ret_val = pframe_get(o, pagenum, pf);
     dbg(DBG_PRINT, "(GRADING3B)\n");
     return ret_val;
-*/
-NOT_YET_IMPLEMENTED("VM: anon lookup");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM: anon lookup");
 }
 
 /* The following three functions should not be difficult. */
@@ -167,7 +165,7 @@ return 0;
 static int
 anon_fillpage(mmobj_t *o, pframe_t *pf)
 {
-/*
+
     KASSERT(pframe_is_busy(pf));
     dbg(DBG_PRINT, "(GRADING3A 4.d)\n");
     KASSERT(!pframe_is_pinned(pf));
@@ -179,21 +177,21 @@ anon_fillpage(mmobj_t *o, pframe_t *pf)
 
     dbg(DBG_PRINT, "(GRADING3B)\n");
     return 0;
-*/
-NOT_YET_IMPLEMENTED("VM: anon fillpage");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM: anon fillpage");
 }
 
 static int
 anon_dirtypage(mmobj_t *o, pframe_t *pf)
 {
-dbg(DBG_PRINT, "(GRADING3D)\n");
-    return 0;
+pframe_set_dirty(pf);
+return 1;
 }
 
 static int
 anon_cleanpage(mmobj_t *o, pframe_t *pf)
 {
-dbg(DBG_PRINT, "(GRADING3D)\n");
-    return 0;
+//dbg(DBG_PRINT, "(GRADING3D)\n");
+        pframe_clear_dirty(pf);
+        return 1;
 }
