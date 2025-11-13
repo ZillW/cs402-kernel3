@@ -144,7 +144,7 @@ KASSERT(o && (0 < o->mmo_refcount) && (&anon_mmobj_ops == o->mmo_ops));
 		slab_obj_free(anon_allocator, o);
         }
 
-NOT_YET_IMPLEMENTED("VM: anon put");
+//NOT_YET_IMPLEMENTED("VM: anon put");
 }
 
 /* Get the corresponding page from the mmobj. No special handling is
