@@ -287,7 +287,6 @@ vmmap_lookup(vmmap_t *map, uint32_t vfn)
 vmmap_t *
 vmmap_clone(vmmap_t *map)
 {
-/*
 vmmap_t* new_map = vmmap_create();
     vmarea_t* source_area = NULL;
 
@@ -310,9 +309,8 @@ vmmap_t* new_map = vmmap_create();
     
     dbg(DBG_PRINT, "(GRADING3B)\n");
     return new_map;
-*/
-NOT_YET_IMPLEMENTED("VM:vmmap clone");
-return NULL;
+
+//NOT_YET_IMPLEMENTED("VM:vmmap clone");
 }
 
 /* Insert a mapping into the map starting at lopage for npages pages.
