@@ -142,7 +142,6 @@ if (len == 0) {
 int
 do_munmap(void *addr, size_t len)
 {
-/*
 if (!PAGE_ALIGNED(addr)) {
         return -EINVAL;
     }
@@ -160,8 +159,7 @@ if (!PAGE_ALIGNED(addr)) {
     }
 
     return 0;
-*/
-NOT_YET_IMPLEMENTED("VM: do munmap");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM: do munmap");
 }
 
