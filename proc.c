@@ -329,7 +329,8 @@ proc_cleanup(int status)
 #endif
 
 #ifdef __VFS__
-        if (curproc->p_pid != 2 && curproc->p_cwd)
+        //if (curproc->p_pid != 2 && curproc->p_cwd)
+        if (curproc->p_cwd)
         {
                 vput(curproc->p_cwd);
                 curproc->p_cwd = NULL;
