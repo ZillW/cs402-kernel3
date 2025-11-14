@@ -215,7 +215,7 @@ vmmap_insert(vmmap_t *map, vmarea_t *newvma)
 int
 vmmap_find_range(vmmap_t *map, uint32_t npages, int dir)
 {
-/*
+
 if (dir == VMMAP_DIR_HILO) {
         vmarea_t *current = NULL;
         vmarea_t *next_area = NULL;
@@ -251,9 +251,8 @@ if (dir == VMMAP_DIR_HILO) {
     }
     
     return -1;
-*/
-NOT_YET_IMPLEMENTED("VM:vmmap findrange");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM:vmmap findrange");
 }
 
 /* Find the vm_area that vfn lies in. Simply scan the address space
