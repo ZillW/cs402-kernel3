@@ -72,7 +72,7 @@ fork_setup_stack(const regs_t *regs, void *kstack)
 int
 do_fork(struct regs *regs)
 {
-/*
+
 KASSERT(regs != NULL);
         dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
         KASSERT(curproc != NULL);
@@ -171,7 +171,6 @@ KASSERT(regs != NULL);
         sched_make_runnable(child_thread);
         regs->r_eax = child_proc->p_pid;
         return child_proc->p_pid;
-*/
-NOT_YET_IMPLEMENTED("VM: do fork");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM: do fork");
 }
