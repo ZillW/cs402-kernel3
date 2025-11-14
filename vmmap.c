@@ -387,29 +387,16 @@ KASSERT(NULL != map);
     list_link_init(&new_area->vma_olink);
 
     mmobj_t* obj_to_map = NULL;
-	int retval = 0;
 
     if (file == NULL)
     {
         obj_to_map = anon_create();
 	dbg(DBG_PRINT, "(GRADING3B)\n");
     } else {
-        retval = file->vn_ops->mmap(file, new_area, &obj_to_map);
+        int retval = file->vn_ops->mmap(file, new_area, &obj_to_map);
         dbg(DBG_PRINT, "(GRADING3B)\n");
     }
 
-	/* --- BEGIN FIX --- */
-    // 3. 检查 mmap 是否返回了错误
-    if (retval < 0) {
-        vmarea_free(new_area); // 释放我们分配的 vmarea
-        return retval;         // 返回错误
-    }
-    // 4. 检查 obj_to_map 是否为 NULL（可能 anon_create() 失败或 mmap 没设置）
-    if (obj_to_map == NULL) {
-        vmarea_free(new_area);
-        return -ENOMEM; // 内存不足
-    }
-    /* --- END FIX --- */
 
     if (flags & MAP_PRIVATE)
     {
