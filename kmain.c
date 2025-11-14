@@ -320,47 +320,29 @@ do_close(2);
 #endif
 
 
-void *
+static void* hello(int arg1, void *arg2) {
+
+        dbg(DBG_PRINT, "(GRADING3B)\n");
+        char *argv[] = { NULL };
+        char *envp[] = { NULL };
+        /*kernel_execve("/usr/bin/vfstest", argv, envp);*/
+        kernel_execve("/sbin/init", argv, envp);
+        return NULL;
+}
+
+static void *
 initproc_run(int arg1, void *arg2)
 {
-   int st;
+        /*NOT_YET_IMPLEMENTED("PROCS: initproc_run");*/
 
 #ifdef __DRIVERS__
-    int fd = do_open("/dev/tty0", O_RDONLY);
-    if (fd != 0) {
-        if (fd >= 0) do_close(fd);
-        do_open("/dev/tty0", O_RDONLY);
-    }
-    
-    fd = do_open("/dev/tty0", O_WRONLY);
-    if (fd != 1) {
-        if (fd >= 0) do_close(fd);
-        do_open("/dev/tty0", O_WRONLY);
-    }
-    
-    fd = do_open("/dev/tty0", O_WRONLY);
-    if (fd != 2) {
-        if (fd >= 0) do_close(fd);
-        do_open("/dev/tty0", O_WRONLY);
-    }
-
-//Shelltest(0, NULL);
-
-#endif
-
-	//while (do_waitpid(-1, 0, &st) != -ECHILD) { }
-
-	//return NULL;
-
-
-	//const char *path = "/sbin/init";
-	const char *path = "usr/bin/hello";
-  	char *argv[] = { (char *)path, NULL };
-	//char *argv[] = { NULL };
-    char *envp[] = { NULL };
-
-	kernel_execve("/sbin/init", argv, envp);
-	panic("kernel_execve(%s) returned in initproc_run\n", path);
-    return NULL;
+        hello(0, NULL);
+#endif /* __DRIVERS__ */
+        
+        while (do_waitpid(-1, 0, NULL) != -ECHILD)
+                ;
+        
+        dbg(DBG_PRINT, "(GRADING1A)\n");
+        return NULL;
 }
 
