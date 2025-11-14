@@ -218,7 +218,6 @@ kthread_exit(void *retval)
 kthread_t *
 kthread_clone(kthread_t *thr)
 {
-/*
     KASSERT(thr != NULL);
     KASSERT(thr->kt_state == KT_RUN);
     dbg(DBG_PRINT, "(GRADING3A 8.a)\n");
@@ -251,9 +250,8 @@ kthread_clone(kthread_t *thr)
     dbg(DBG_PRINT, "(GRADING3B)\n");
     
     return cloned_thread;
-*/
-NOT_YET_IMPLEMENTED("VM: kthread clone");
-return NULL;
+
+//NOT_YET_IMPLEMENTED("VM: kthread clone");
 }
 
 /*
