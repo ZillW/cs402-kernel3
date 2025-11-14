@@ -52,7 +52,7 @@ int
 do_mmap(void *addr, size_t len, int prot, int flags,
         int fd, off_t off, void **ret)
 {
-/*
+
 if (len == 0) {
         return -EINVAL;
     }
@@ -126,9 +126,9 @@ if (len == 0) {
     tlb_flush_all();
 
     return 0;
-*/
-NOT_YET_IMPLEMENTED("VM: do mmap");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM: do mmap");
+
 }
 
 
