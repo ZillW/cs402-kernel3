@@ -86,6 +86,12 @@ do_fork(struct regs *regs)
     proc_t *child_proc = proc_create("child_proc");
     KASSERT(child_proc != NULL);
 
+	// 实现 CWD 继承
+    child_proc->p_cwd = curproc->p_cwd;
+    if (child_proc->p_cwd) {
+        vref(child_proc->p_cwd);
+    }
+
     /* Copy vmmap */
     vmmap_t *child_vmmap = vmmap_clone(curproc->p_vmmap);
     KASSERT(child_vmmap != NULL);
