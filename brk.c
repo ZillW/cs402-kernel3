@@ -73,7 +73,6 @@
 int
 do_brk(void *addr, void **ret)
 {
-/*
 if (addr == NULL) {
         dbg(DBG_PRINT, "(GRADING3B)\n");
         *ret = curproc->p_brk;
@@ -121,7 +120,6 @@ if (addr == NULL) {
     curproc->p_brk = addr;
     *ret = addr;
     return 0;
-*/
-NOT_YET_IMPLEMENTED("VM: do brk");
-return 0;
+
+//NOT_YET_IMPLEMENTED("VM: do brk");
 }
