@@ -247,12 +247,12 @@ pid_t new_pid = _proc_getid();
         }
 
 #ifdef __VFS__
-        if (vfs_root_vn != NULL)
+        /*if (vfs_root_vn != NULL)
         {
                 new_proc->p_cwd = vfs_root_vn;
                 vref(vfs_root_vn);
 		dbg(DBG_PRINT, "(GRADING2B)\n");
-        }
+        }*/
 
         int i;
         for (i = 0; i < NFILES; i++) {
