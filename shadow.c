@@ -131,40 +131,26 @@ static void
 shadow_put(mmobj_t *o)
 {
 
-KASSERT(o && (0 < o->mmo_refcount) && (&shadow_mmobj_ops == o->mmo_ops));
-    dbg(DBG_PRINT, "(GRADING3A 6.c)\n");
-    
-    KASSERT(NULL != o && (&shadow_mmobj_ops == o->mmo_ops) && (0 < o->mmo_refcount));
+        KASSERT(o && (0 < o->mmo_refcount) && (&shadow_mmobj_ops == o->mmo_ops));
+        dbg(DBG_PRINT, "(GRADING3A 6.c)\n");
 
-    if (o->mmo_refcount - 1 == o->mmo_nrespages) {
-        
-        // 同样使用 "while list is not empty" 模式
-        while (!list_empty(&o->mmo_respages)) {
-            pframe_t *p = list_head(&o->mmo_respages, pframe_t, pf_olink);
+        pframe_t *p;
+        KASSERT(NULL != o && (&shadow_mmobj_ops == o->mmo_ops) && (0 < o->mmo_refcount));
+        if(o->mmo_refcount-1 == o->mmo_nrespages){
+                list_iterate_begin(&o->mmo_respages, p, pframe_t, pf_olink){
+                        pframe_unpin(p);
+                        pframe_clean(p);
+                        dbg(DBG_PRINT, "(GRADING3B)\n");
+                        pframe_free(p);
+                }list_iterate_end();
 
-            // 【修复 1】只有在 pframe 被 pin 住时才 unpin
-            if (pframe_is_pinned(p)) {
-                pframe_unpin(p);
-            }
+                o->mmo_shadowed->mmo_ops->put(o->mmo_shadowed);
 
-            // 【修复 2】只有在 pframe 是 dirty 时才 clean
-            if (pframe_is_dirty(p)) {
-                pframe_clean(p);
-            }
-            
-            dbg(DBG_PRINT, "(GRADING3B)\n");
-            pframe_free(p); // pframe_free 会安全地从链表中移除 p
+                slab_obj_free(shadow_allocator, o);
+        }else {
+                dbg(DBG_PRINT,"(GRADING3B)\n");
         }
-
-        // 当 shadow object 自己被销毁时，它必须释放对它所 shadow 的对象的引用
-        o->mmo_shadowed->mmo_ops->put(o->mmo_shadowed);
-
-        slab_obj_free(shadow_allocator, o);
-    } else {
-        dbg(DBG_PRINT,"(GRADING3B)\n");
-    }
-    
-    --o->mmo_refcount;
+        --o->mmo_refcount;
 }
 
 /* This function looks up the given page in this shadow object. The
