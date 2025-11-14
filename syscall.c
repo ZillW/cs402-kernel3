@@ -74,7 +74,7 @@ init_func(syscall_init);
 static int
 sys_read(read_args_t *arg)
 {
-
+/*
 read_args_t kern_args;
     void *temp_buffer = NULL;
     int bytes_actually_read = -1;
@@ -112,9 +112,9 @@ read_args_t kern_args;
 
     page_free(temp_buffer);
     return bytes_actually_read;
-
-//NOT_YET_IMPLEMENTED("VM: sys read");
-
+*/
+NOT_YET_IMPLEMENTED("VM: sys read");
+return 0;
 }
 
 /*
