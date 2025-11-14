@@ -73,104 +73,126 @@ int
 do_fork(struct regs *regs)
 {
 
-KASSERT(regs != NULL);
-        dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
-        KASSERT(curproc != NULL);
-        dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
-        KASSERT(curproc->p_state == PROC_RUNNING);
-        dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
+   KASSERT(regs != NULL);
+    dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
+    KASSERT(curproc != NULL);
+    dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
+    KASSERT(curproc->p_state == PROC_RUNNING);
+    dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
 
-        dbg(DBG_PRINT, "(GRADING3B)\n");
+    dbg(DBG_PRINT, "(GRADING3B)\n");
 
-        proc_t *child_proc = proc_create("child_proc");
-        KASSERT(child_proc != NULL);
+    /* Create child process */
+    proc_t *child_proc = proc_create("child_proc");
+    KASSERT(child_proc != NULL);
 
-        vmmap_t *child_vmmap = vmmap_clone(curproc->p_vmmap);
-        KASSERT(child_vmmap != NULL);
+    /* Copy vmmap */
+    vmmap_t *child_vmmap = vmmap_clone(curproc->p_vmmap);
+    KASSERT(child_vmmap != NULL);
 
-        child_proc->p_vmmap = child_vmmap;
-        child_proc->p_vmmap->vmm_proc = child_proc;
+    child_proc->p_vmmap = child_vmmap;
+    child_proc->p_vmmap->vmm_proc = child_proc;
 
-        vmarea_t *curr_vmarea = NULL;
-        list_iterate_begin(&child_vmmap->vmm_list, curr_vmarea, vmarea_t, vma_plink) {
-            vmarea_t *temp = vmmap_lookup(curproc->p_vmmap, curr_vmarea->vma_start);
-            KASSERT(temp != NULL);
+    vmarea_t *curr_vmarea = NULL;
 
-            if ((curr_vmarea->vma_flags & MAP_TYPE) == MAP_PRIVATE) {
-                dbg(DBG_PRINT, "(GRADING3B)\n");
+    list_iterate_begin(&child_vmmap->vmm_list, curr_vmarea, vmarea_t, vma_plink) {
+        vmarea_t *temp = vmmap_lookup(curproc->p_vmmap, curr_vmarea->vma_start);
+        KASSERT(temp != NULL);
 
-                mmobj_t *bottom_obj = mmobj_bottom_obj(temp->vma_obj);
-                bottom_obj->mmo_ops->ref(bottom_obj);
-
-                mmobj_t *parent_shadow = shadow_create();
-                parent_shadow->mmo_shadowed = temp->vma_obj;
-                parent_shadow->mmo_un.mmo_bottom_obj = bottom_obj;
-
-                mmobj_t *child_shadow = shadow_create();
-                child_shadow->mmo_shadowed = temp->vma_obj;
-                child_shadow->mmo_un.mmo_bottom_obj = bottom_obj;
-
-		temp->vma_obj->mmo_ops->ref(temp->vma_obj);
-
-                list_remove(&temp->vma_olink);
-                list_insert_tail(mmobj_bottom_vmas(bottom_obj), &temp->vma_olink);
-
-		list_insert_tail(mmobj_bottom_vmas(bottom_obj), &curr_vmarea->vma_olink);
-
-                temp->vma_obj = parent_shadow;
-                curr_vmarea->vma_obj = child_shadow;
-            } else {
-                dbg(DBG_ANON, "(GRADING3B)\n");
-                curr_vmarea->vma_obj = temp->vma_obj;
-                curr_vmarea->vma_obj->mmo_ops->ref(curr_vmarea->vma_obj);
-            }
+        /* Deal based on the vmarea type */
+        if ((curr_vmarea->vma_flags & MAP_TYPE) == MAP_PRIVATE) {
+            dbg(DBG_PRINT, "(GRADING3B)\n");
+            
+            /* 1. Get bottom object and increase reference count */
+            mmobj_t *bottom_obj = mmobj_bottom_obj(temp->vma_obj);
+            bottom_obj->mmo_ops->ref(bottom_obj);
+            
+            /* 2. Increase reference for shadowed object (both shadows point to it) */
+            temp->vma_obj->mmo_ops->ref(temp->vma_obj);
+            
+            /* 3. Create parent's shadow object */
+            mmobj_t *parent_shadow = shadow_create();
+            parent_shadow->mmo_shadowed = temp->vma_obj;
+            parent_shadow->mmo_un.mmo_bottom_obj = bottom_obj;
+            
+            /* 4. Create child's shadow object */
+            mmobj_t *child_shadow = shadow_create();
+            child_shadow->mmo_shadowed = temp->vma_obj;
+            child_shadow->mmo_un.mmo_bottom_obj = bottom_obj;
+            
+            /* 5. Handle parent's vma_olink: remove from old list, insert to bottom_obj */
+            list_remove(&temp->vma_olink);
+            list_insert_tail(mmobj_bottom_vmas(bottom_obj), &temp->vma_olink);
+            
+            /* 6. Insert child's vma_olink to bottom_obj */
+            list_insert_tail(mmobj_bottom_vmas(bottom_obj), &curr_vmarea->vma_olink);
+            
+            /* 7. Update vma_obj pointers */
+            temp->vma_obj = parent_shadow;
+            curr_vmarea->vma_obj = child_shadow;
+            
+        } else {
+            /* MAP_SHARED: directly share the same object */
+            dbg(DBG_ANON, "(GRADING3B)\n");
+            curr_vmarea->vma_obj = temp->vma_obj;
+            curr_vmarea->vma_obj->mmo_ops->ref(curr_vmarea->vma_obj);
+            
+            /* For MAP_SHARED, insert to shared object's vmas list */
             list_insert_tail(mmobj_bottom_vmas(curr_vmarea->vma_obj), &curr_vmarea->vma_olink);
-        } list_iterate_end();
-
-        kthread_t *child_thread = kthread_clone(curthr);
-        KASSERT(child_thread != NULL);
-        
-        child_thread->kt_proc = child_proc;
-
-        KASSERT(child_proc->p_state == PROC_RUNNING);
-        dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
-        KASSERT(child_proc->p_pagedir != NULL);
-        dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
-        KASSERT(child_thread->kt_kstack != NULL);
-        dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
-
-        list_insert_tail(&child_proc->p_threads, &child_thread->kt_plink);
-
-        regs_t child_regs = *regs;
-        child_regs.r_eax = 0;
-
-        child_thread->kt_ctx.c_pdptr = child_proc->p_pagedir;
-        child_thread->kt_ctx.c_eip = (uint32_t) userland_entry;
-        child_thread->kt_ctx.c_esp = fork_setup_stack(&child_regs, child_thread->kt_kstack);
-        child_thread->kt_ctx.c_kstack = (uintptr_t) child_thread->kt_kstack;
-        child_thread->kt_ctx.c_kstacksz = DEFAULT_STACK_SIZE;
-
-        int i;
-        for (i = 0; i < NFILES; i++){
-                child_proc->p_files[i] = curproc->p_files[i];
-                if (child_proc->p_files[i] != NULL){
-                        dbg(DBG_PRINT, "(GRADING3B)\n");
-                        fref(child_proc->p_files[i]);
-                }
-                else {
-                        dbg(DBG_PRINT, "(GRADING3B)\n");
-                }
         }
+    } list_iterate_end();
 
-       pt_unmap_range(curproc->p_pagedir, USER_MEM_LOW, USER_MEM_HIGH);
-       tlb_flush_all();
+    /* Create thread and initialize it */
+    kthread_t *child_thread = kthread_clone(curthr);
+    KASSERT(child_thread != NULL);
+    
+    child_thread->kt_proc = child_proc;
 
-        child_proc->p_brk = curproc->p_brk;
-        child_proc->p_start_brk = curproc->p_start_brk;
+    KASSERT(child_proc->p_state == PROC_RUNNING);
+    dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
+    KASSERT(child_proc->p_pagedir != NULL);
+    dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
+    KASSERT(child_thread->kt_kstack != NULL);
+    dbg(DBG_PRINT, "(GRADING3A 7.a)\n");
 
-        sched_make_runnable(child_thread);
-        regs->r_eax = child_proc->p_pid;
-        return child_proc->p_pid;
+    list_insert_tail(&child_proc->p_threads, &child_thread->kt_plink);
+
+    /* Setup child's registers - child returns 0 */
+    regs_t child_regs = *regs;
+    child_regs.r_eax = 0;
+
+    child_thread->kt_ctx.c_pdptr = child_proc->p_pagedir;
+    child_thread->kt_ctx.c_eip = (uint32_t) userland_entry;
+    child_thread->kt_ctx.c_esp = fork_setup_stack(&child_regs, child_thread->kt_kstack);
+    child_thread->kt_ctx.c_kstack = (uintptr_t) child_thread->kt_kstack;
+    child_thread->kt_ctx.c_kstacksz = DEFAULT_STACK_SIZE;
+
+    /* Copy the file table */
+    int i;
+    for (i = 0; i < NFILES; i++){
+        child_proc->p_files[i] = curproc->p_files[i];
+        if (child_proc->p_files[i] != NULL){
+            dbg(DBG_PRINT, "(GRADING3B)\n");
+            fref(child_proc->p_files[i]);
+        } else {
+            dbg(DBG_PRINT, "(GRADING3B)\n");
+        }
+    }
+
+    /* Unmap the userland page table entries and flush the TLB */
+    pt_unmap_range(curproc->p_pagedir, USER_MEM_LOW, USER_MEM_HIGH);
+    tlb_flush_all();
+
+    /* Copy brk information */
+    child_proc->p_brk = curproc->p_brk;
+    child_proc->p_start_brk = curproc->p_start_brk;
+
+    /* Make child runnable */
+    sched_make_runnable(child_thread);
+    
+    /* Parent returns child's PID */
+    regs->r_eax = child_proc->p_pid;
+    return child_proc->p_pid;
 
 //NOT_YET_IMPLEMENTED("VM: do fork");
 }
