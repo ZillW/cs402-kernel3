@@ -159,7 +159,7 @@ KASSERT(o && (0 < o->mmo_refcount) && (&shadow_mmobj_ops == o->mmo_ops));
         // 当 shadow object 自己被销毁时，它必须释放对它所 shadow 的对象的引用
         o->mmo_shadowed->mmo_ops->put(o->mmo_shadowed);
 
-        //slab_obj_free(shadow_allocator, o);
+        slab_obj_free(shadow_allocator, o);
     } else {
         dbg(DBG_PRINT,"(GRADING3B)\n");
     }
