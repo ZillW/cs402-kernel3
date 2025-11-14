@@ -143,7 +143,7 @@ KASSERT(o && (0 < o->mmo_refcount) && (&anon_mmobj_ops == o->mmo_ops));
             pframe_free(pf); // pframe_free 会安全地从链表中移除 pf
         }
 
-        //slab_obj_free(anon_allocator, o);
+        slab_obj_free(anon_allocator, o);
     }
     
     dbg(DBG_PRINT, "(GRADING3B)\n");
