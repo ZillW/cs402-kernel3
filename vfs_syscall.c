@@ -65,46 +65,54 @@
 int
 do_read(int fd, void *buf, size_t nbytes)
 {
-	if (fd < 0 || fd >= NFILES) {
-		dbg(DBG_PRINT, "(GRADING2B)\n");
+        if (fd < 0 || fd >= NFILES) {
+                dbg(DBG_PRINT, "(GRADING2B)\n");
                 return -EBADF;
         }
 
         file_t *f = fget(fd);
 
         if (!f) {
-		dbg(DBG_PRINT, "(GRADING2B)\n");
-		return -EBADF;
-	}
+                dbg(DBG_PRINT, "(GRADING2B)\n");
+                return -EBADF;
+        }
 
         if (!(f->f_mode & FMODE_READ)) {
-	 	fput(f);
-		dbg(DBG_PRINT, "(GRADING2B)\n"); 
-		return -EBADF; 
-	}
-        
-	if (S_ISDIR(f->f_vnode->vn_mode)) { 
-	fput(f);
-	dbg(DBG_PRINT, "(GRADING2B)\n"); 
-	return -EISDIR; 
-	}
+                fput(f);
+                dbg(DBG_PRINT, "(GRADING2B)\n"); 
+                return -EBADF; 
+        }
+
+        if (S_ISDIR(f->f_vnode->vn_mode)) { 
+        fput(f);
+        dbg(DBG_PRINT, "(GRADING2B)\n"); 
+        return -EISDIR; 
+        }
 
         if (!f->f_vnode->vn_ops || !f->f_vnode->vn_ops->read) {
-	fput(f);
-	dbg(DBG_PRINT, "(GRADING2B)\n");
-	return -ENOTSUP; 
-	}
+        fput(f);
+        dbg(DBG_PRINT, "(GRADING2B)\n");
+        return -ENOTSUP; 
+        }
 
         int ret = f->f_vnode->vn_ops->read(f->f_vnode, f->f_pos, buf, nbytes);
 
-        if (ret > 0) {
-	f->f_pos += ret;
-	dbg(DBG_PRINT, "(GRADING2B)\n");
-	}
+        if (ret >= 0) {
+    dbg(DBG_PRINT, "(GRADING3B)\n"); // 标记
+    int lseek_ret = do_lseek(fd, ret, SEEK_CUR); // <-- 使用 do_lseek
+    fput(f);
+    if (lseek_ret < 0) {
+        dbg(DBG_PRINT, "(GRADING3D)\n"); // 标记
+        return lseek_ret; // 返回 lseek 的错误
+    }
+    dbg(DBG_PRINT, "(GRADING3D)\n"); // 标记
+    return ret; // 返回 read 的结果
+} else {
+    fput(f);
+    dbg(DBG_PRINT, "(GRADING3D)\n"); // 标记
+    return ret;
+}
 
-        fput(f);
-	dbg(DBG_PRINT, "(GRADING2B)\n");
-        return ret;
 }
 
 /* Very similar to do_read.  Check f_mode to be sure the file is writable.  If
@@ -118,8 +126,8 @@ do_read(int fd, void *buf, size_t nbytes)
 int
 do_write(int fd, const void *buf, size_t nbytes)
 {
-	if (fd < 0 || fd >= NFILES) {
-		dbg(DBG_PRINT, "(GRADING2B)\n");
+        if (fd < 0 || fd >= NFILES) {
+                dbg(DBG_PRINT, "(GRADING2B)\n");
                 return -EBADF;
         }
 
@@ -129,17 +137,28 @@ do_write(int fd, const void *buf, size_t nbytes)
         if (!f->f_vnode->vn_ops || !f->f_vnode->vn_ops->write) { fput(f); dbg(DBG_PRINT, "(GRADING2B)\n"); return -ENOTSUP; }
         if (f->f_mode & FMODE_APPEND) {
                 int rc = do_lseek(fd, 0, SEEK_END);
-		dbg(DBG_PRINT, "(GRADING2B)\n");
+                dbg(DBG_PRINT, "(GRADING2B)\n");
                 if (rc < 0) { fput(f); dbg(DBG_PRINT, "(GRADING2B)\n"); return rc; }
         }
         if (S_ISDIR(f->f_vnode->vn_mode)) { fput(f); dbg(DBG_PRINT, "(GRADING2B)\n"); return -EISDIR; }
         int ret = f->f_vnode->vn_ops->write(f->f_vnode, f->f_pos, buf, nbytes);
-        if (ret > 0) {f->f_pos += ret; dbg(DBG_PRINT, "(GRADING2B)\n");}
-        KASSERT((S_ISCHR(f->f_vnode->vn_mode)) || (S_ISBLK(f->f_vnode->vn_mode)) || 
-                ((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)));
-        dbg(DBG_PRINT, "(GRADING2A 3.a)\n");
-        fput(f);
-        return ret;
+        if (ret >= 0) {
+    int lseek_ret = do_lseek(fd, ret, SEEK_CUR); // <-- 使用 do_lseek
+    KASSERT((S_ISCHR(f->f_vnode->vn_mode)) || (S_ISBLK(f->f_vnode->vn_mode)) || 
+            ((S_ISREG(f->f_vnode->vn_mode)) && (f->f_pos <= f->f_vnode->vn_len)));
+    dbg(DBG_PRINT, "(GRADING2A 3.a)\n");
+    fput(f); // fput 必须在 lseek 之后
+    if (lseek_ret < 0) {
+        dbg(DBG_PRINT, "(GRADING3D)\n"); // 标记
+        return lseek_ret;
+    }
+    dbg(DBG_PRINT, "(GRADING3D)\n"); // 标记
+    return ret;
+}
+fput(f);
+dbg(DBG_PRINT, "(GRADING3D)\n"); // 标记
+return ret;
+
 }
 
 /*
@@ -347,18 +366,57 @@ size_t name_len = 0;
 int
 do_rmdir(const char *path)
 {
-        size_t nlen; const char *nm; vnode_t *dv;
-        int rc = dir_namev(path, &nlen, &nm, NULL, &dv);
-        if (rc < 0) {dbg(DBG_PRINT, "(GRADING2B)\n"); return rc;}
-        if (nlen == 1 && nm[0] == '.') { vput(dv); dbg(DBG_PRINT, "(GRADING2B)\n"); return -EINVAL; }
-        if (nlen == 2 && nm[0] == '.' && nm[1] == '.') { vput(dv); dbg(DBG_PRINT, "(GRADING2B)\n"); return -ENOTEMPTY; }
-        if (!dv->vn_ops || !dv->vn_ops->rmdir) { vput(dv); dbg(DBG_PRINT, "(GRADING2B)\n"); return -ENOTDIR; }
-        KASSERT(NULL != dv->vn_ops->rmdir);
+size_t len = 0;
+        vnode_t *res_vnode = NULL;
+        int errno = dir_namev(path, &len, &path, NULL, &res_vnode);
+
+        if (errno < 0 || res_vnode == NULL)
+        {
+                dbg(DBG_PRINT, "(GRADING2B)\n");
+                return errno;
+        }
+
+        vnode_t *result=NULL;
+        errno = lookup(res_vnode,path,len,&result);
+
+        if(errno < 0){
+                dbg(DBG_PRINT, "(GRADING3D)\n");
+                vput(res_vnode);
+                return errno;
+        }
+
+        if (result->vn_ops->rmdir == NULL || !S_ISDIR(result->vn_mode))
+        {
+                dbg(DBG_PRINT, "(GRADING2B)\n");
+                vput(result);
+                vput(res_vnode);
+                return -ENOTDIR;
+        }
+        if (len == 1 && name_match(path, ".", len))
+        {
+                dbg(DBG_PRINT, "(GRADING2B)\n");
+                vput(result);
+                vput(res_vnode);
+                return -EINVAL;
+        }
+
+        if (len == 2 && name_match(path, "..", len))
+        {
+                dbg(DBG_PRINT, "(GRADING2B)\n");
+                vput(result);
+                vput(res_vnode);
+                return -ENOTEMPTY;
+        }
+
+        vput(result);
+
+        KASSERT(NULL != res_vnode->vn_ops->rmdir);
         dbg(DBG_PRINT, "(GRADING2A 3.d)\n");
-	dbg(DBG_PRINT, "(GRADING2B)\n");
-        rc = dv->vn_ops->rmdir(dv, nm, nlen);
-        vput(dv);
-        return rc;
+        dbg(DBG_PRINT, "(GRADING2B)\n"); /* depends */
+        int res = res_vnode->vn_ops->rmdir(res_vnode, path, len);
+        vput(res_vnode);
+
+        return res;
 }
 
 /*
@@ -378,21 +436,44 @@ do_rmdir(const char *path)
 int
 do_unlink(const char *path)
 {
-        size_t nlen; const char *nm; vnode_t *dv;
-        int rc = dir_namev(path, &nlen, &nm, NULL, &dv);
-        if (rc < 0) {dbg(DBG_PRINT, "(GRADING2B)\n"); return rc;}
-        vnode_t *vn;
-        rc = lookup(dv, nm, nlen, &vn);
-        if (rc < 0) { vput(dv); dbg(DBG_PRINT, "(GRADING2B)\n"); return rc; }
-        if (S_ISDIR(vn->vn_mode)) { vput(vn); vput(dv); dbg(DBG_PRINT, "(GRADING2B)\n"); return -EPERM; }
-        vput(vn);
-        if (!dv->vn_ops || !dv->vn_ops->unlink) { vput(dv); dbg(DBG_PRINT, "(GRADING2B)\n"); return -ENOTDIR; }
-        KASSERT(NULL != dv->vn_ops->unlink);
+size_t len = 0;
+
+        vnode_t *res_vnode = NULL;
+        int errno = dir_namev(path, &len, &path, NULL, &res_vnode);
+
+        if (errno < 0)
+        {
+                dbg(DBG_PRINT, "(GRADING2D)\n");
+                return errno;
+        }
+
+        vnode_t *node = NULL;
+
+        errno = lookup(res_vnode, path, len, &node);
+
+        if (errno < 0)
+        {
+                dbg(DBG_PRINT, "(GRADING2B)\n");vput(res_vnode);
+                return errno;
+        }
+
+        if (S_ISDIR(node->vn_mode))
+        {
+                dbg(DBG_PRINT, "(GRADING2B)\n");
+                vput(res_vnode);
+                vput(node);
+                return -EISDIR;
+        }
+
+        KASSERT(NULL != res_vnode->vn_ops->unlink);
         dbg(DBG_PRINT, "(GRADING2A 3.e)\n");
-	dbg(DBG_PRINT, "(GRADING2B)\n");
-        rc = dv->vn_ops->unlink(dv, nm, nlen);
-        vput(dv);
-        return rc;
+        dbg(DBG_PRINT, "(GRADING2B)\n"); /* depends */
+        int res = res_vnode->vn_ops->unlink(res_vnode, path, len);
+
+        vput(res_vnode);
+        vput(node);
+
+        return res;
 }
 
 /* To link:
