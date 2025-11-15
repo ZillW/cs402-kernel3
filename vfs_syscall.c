@@ -366,57 +366,53 @@ size_t name_len = 0;
 int
 do_rmdir(const char *path)
 {
-size_t len = 0;
-        vnode_t *res_vnode = NULL;
-        int errno = dir_namev(path, &len, &path, NULL, &res_vnode);
+size_t nlen; const char *nm; vnode_t *dv;
+        int rc = dir_namev(path, &nlen, &nm, NULL, &dv);
+        if (rc < 0) {dbg(DBG_PRINT, "(GRADING2B)\n"); return rc;}
 
-        if (errno < 0 || res_vnode == NULL)
-        {
-                dbg(DBG_PRINT, "(GRADING2B)\n");
-                return errno;
+        /* --- KERNEL 3 逻辑融合开始 --- */
+        /* 1. 在删除前，先查找目标 vnode */
+        vnode_t *target_vn = NULL;
+        rc = lookup(dv, nm, nlen, &target_vn);
+
+        if (rc < 0) {
+                dbg(DBG_PRINT, "(GRADING3D)\n"); /* 标记来自新逻辑 */
+                vput(dv);
+                return rc; /* 目标不存在, 例如 ENOENT */
         }
 
-        vnode_t *result=NULL;
-        errno = lookup(res_vnode,path,len,&result);
-
-        if(errno < 0){
-                dbg(DBG_PRINT, "(GRADING3D)\n");
-                vput(res_vnode);
-                return errno;
+        /* 2. 将对 '.' 和 '..' 的检查移到 lookup 之后 */
+        if (nlen == 1 && nm[0] == '.') { 
+                vput(target_vn); /* 释放 target_vn 的引用 */
+                vput(dv); 
+                dbg(DBG_PRINT, "(GRADING2B)\n"); 
+                return -EINVAL; 
+        }
+        if (nlen == 2 && nm[0] == '.' && nm[1] == '.') { 
+                vput(target_vn); /* 释放 target_vn 的引用 */
+                vput(dv); 
+                dbg(DBG_PRINT, "(GRADING2B)\n"); 
+                return -ENOTEMPTY; 
         }
 
-        if (result->vn_ops->rmdir == NULL || !S_ISDIR(result->vn_mode))
-        {
-                dbg(DBG_PRINT, "(GRADING2B)\n");
-                vput(result);
-                vput(res_vnode);
-                return -ENOTDIR;
-        }
-        if (len == 1 && name_match(path, ".", len))
-        {
-                dbg(DBG_PRINT, "(GRADING2B)\n");
-                vput(result);
-                vput(res_vnode);
-                return -EINVAL;
+        /* 3. 现在在 target_vn 上检查 ENOTDIR */
+        if (!dv->vn_ops || !dv->vn_ops->rmdir || !S_ISDIR(target_vn->vn_mode)) { 
+                vput(target_vn); /* 释放 target_vn 的引用 */
+                vput(dv); 
+                dbg(DBG_PRINT, "(GRADING2B)\n"); 
+                return -ENOTDIR; 
         }
 
-        if (len == 2 && name_match(path, "..", len))
-        {
-                dbg(DBG_PRINT, "(GRADING2B)\n");
-                vput(result);
-                vput(res_vnode);
-                return -ENOTEMPTY;
-        }
-
-        vput(result);
-
-        KASSERT(NULL != res_vnode->vn_ops->rmdir);
+        /* 4. 释放来自 lookup 的引用，准备删除 */
+        vput(target_vn);
+        /* --- KERNEL 3 逻辑融合结束 --- */
+        
+        KASSERT(NULL != dv->vn_ops->rmdir);
         dbg(DBG_PRINT, "(GRADING2A 3.d)\n");
-        dbg(DBG_PRINT, "(GRADING2B)\n"); /* depends */
-        int res = res_vnode->vn_ops->rmdir(res_vnode, path, len);
-        vput(res_vnode);
-
-        return res;
+	dbg(DBG_PRINT, "(GRADING2B)\n");
+        rc = dv->vn_ops->rmdir(dv, nm, nlen);
+        vput(dv);
+        return rc;
 }
 
 /*
@@ -436,44 +432,43 @@ size_t len = 0;
 int
 do_unlink(const char *path)
 {
-size_t len = 0;
-
-        vnode_t *res_vnode = NULL;
-        int errno = dir_namev(path, &len, &path, NULL, &res_vnode);
-
-        if (errno < 0)
-        {
-                dbg(DBG_PRINT, "(GRADING2D)\n");
-                return errno;
+size_t nlen; const char *nm; vnode_t *dv;
+        int rc = dir_namev(path, &nlen, &nm, NULL, &dv);
+        if (rc < 0) {dbg(DBG_PRINT, "(GRADING2B)\n"); return rc;}
+        
+        vnode_t *vn;
+        rc = lookup(dv, nm, nlen, &vn);
+        if (rc < 0) { vput(dv); dbg(DBG_PRINT, "(GRADING2B)\n"); return rc; }
+        if (S_ISDIR(vn->vn_mode)) { vput(vn); vput(dv); dbg(DBG_PRINT, "(GRADING2B)\n"); return -EPERM; }
+        
+        /* * --- KERNEL 3 关键修复 ---
+         * 删除了您原有的 vput(vn); 这一行。
+         * vput(vn); // <-- 导致 Use-After-Free 的 bug 已被移除
+         */
+        
+        if (!dv->vn_ops || !dv->vn_ops->unlink) { 
+                /* 如果不支持 unlink, 必须在返回前释放 vn */
+                vput(vn); 
+                vput(dv); 
+                dbg(DBG_PRINT, "(GRADING2B)\n"); 
+                return -ENOTDIR; 
         }
-
-        vnode_t *node = NULL;
-
-        errno = lookup(res_vnode, path, len, &node);
-
-        if (errno < 0)
-        {
-                dbg(DBG_PRINT, "(GRADING2B)\n");vput(res_vnode);
-                return errno;
-        }
-
-        if (S_ISDIR(node->vn_mode))
-        {
-                dbg(DBG_PRINT, "(GRADING2B)\n");
-                vput(res_vnode);
-                vput(node);
-                return -EISDIR;
-        }
-
-        KASSERT(NULL != res_vnode->vn_ops->unlink);
+        KASSERT(NULL != dv->vn_ops->unlink);
         dbg(DBG_PRINT, "(GRADING2A 3.e)\n");
-        dbg(DBG_PRINT, "(GRADING2B)\n"); /* depends */
-        int res = res_vnode->vn_ops->unlink(res_vnode, path, len);
+	dbg(DBG_PRINT, "(GRADING2B)\n");
 
-        vput(res_vnode);
-        vput(node);
+        /* 1. 先执行 unlink 操作 */
+        rc = dv->vn_ops->unlink(dv, nm, nlen);
+        
+        /* 2. 释放父目录 vnode */
+        vput(dv);
 
-        return res;
+        /* * --- KERNEL 3 关键修复 ---
+         * 3. 最后才释放目标 vnode (vn)
+         */
+        vput(vn);
+        
+        return rc;
 }
 
 /* To link:
