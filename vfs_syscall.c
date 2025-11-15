@@ -588,16 +588,18 @@ if (fd < 0 || fd >= NFILES) {dbg(DBG_PRINT, "(GRADING2B)\n"); return -EBADF;}
         int n = f->f_vnode->vn_ops->readdir(f->f_vnode, f->f_pos, dirp);
         
         if (n > 0) {
-                f->f_pos += n; 
-                fput(f);
-                dbg(DBG_PRINT, "(GRADING2B)\n");
-                return sizeof(dirent_t); 
-
-        } else {
-                fput(f);
-		dbg(DBG_PRINT, "(GRADING2B)\n");
-                return n;
-        }
+    int lseek_ret = do_lseek(fd, n, SEEK_CUR); // <-- 使用 do_lseek
+    fput(f);
+    if (lseek_ret < 0) {
+        dbg(DBG_PRINT, "(GRADING3D)\n"); // 标记
+        return lseek_ret;
+    }
+    dbg(DBG_PRINT, "(GRADING2B)\n");
+    return sizeof(dirent_t); 
+}
+dbg(DBG_PRINT, "(GRADING3D)\n"); // 标记
+fput(f);
+return 0;  
 }
 
 /*
